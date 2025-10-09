@@ -17,6 +17,7 @@ const CarRaceGame = () => {
   const [obstacles, setObstacles] = useState([]);
   const [roadOffset, setRoadOffset] = useState(0);
   const [speed, setSpeed] = useState(5);
+  const [tiltAngle, setTiltAngle] = useState(0);
 
   const gameLoopRef = useRef();
   const obstacleIdRef = useRef(0);
@@ -33,7 +34,6 @@ const CarRaceGame = () => {
 
   const checkCollision = useCallback((playerLane, obstacles) => {
     const playerY = GAME_HEIGHT - CAR_HEIGHT - 30;
-
     for (const obstacle of obstacles) {
       if (obstacle.lane === playerLane) {
         const obstacleBottom = obstacle.y + OBSTACLE_HEIGHT;
@@ -46,6 +46,7 @@ const CarRaceGame = () => {
     return false;
   }, []);
 
+  // Keyboard controls
   useEffect(() => {
     if (!gameStarted || gameOver) return;
 
@@ -61,6 +62,44 @@ const CarRaceGame = () => {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [gameStarted, gameOver]);
 
+  // Gyro / motion controls for mobile
+  useEffect(() => {
+    const handleOrientation = (event) => {
+      const gamma = event.gamma; // left/right tilt
+      setTiltAngle(gamma);
+
+      if (!gameStarted || gameOver) return;
+
+      // If device tilted left/right more than threshold, move car
+      if (gamma < -10) {
+        setPlayerLane((prev) => Math.max(0, prev - 1));
+      } else if (gamma > 10) {
+        setPlayerLane((prev) => Math.min(LANES - 1, prev + 1));
+      }
+    };
+
+    // Ask for permission (needed on iOS)
+    const enableGyro = async () => {
+      if (typeof DeviceOrientationEvent !== "undefined" && DeviceOrientationEvent.requestPermission) {
+        try {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          if (permission === "granted") {
+            window.addEventListener("deviceorientation", handleOrientation);
+          }
+        } catch (err) {
+          console.log("Permission denied for motion sensors");
+        }
+      } else {
+        window.addEventListener("deviceorientation", handleOrientation);
+      }
+    };
+
+    enableGyro();
+
+    return () => window.removeEventListener("deviceorientation", handleOrientation);
+  }, [gameStarted, gameOver]);
+
+  // Main game loop
   useEffect(() => {
     if (!gameStarted || gameOver) return;
 
@@ -104,15 +143,20 @@ const CarRaceGame = () => {
   }, [gameStarted, gameOver, playerLane, checkCollision, speed]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-blck text-white p-4">
-      <h1 className="text-5xl font-bold mb-2 text-cyan-400 drop-shadow-md">Neon Racer</h1>
-      <p className="text-gray-400 mb-4">Use ← → or A / D to move</p>
-      <div className="text-2xl font-semibold mb-2">Score: {Math.floor(score / 10)}</div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
+      <h1 className="text-4xl sm:text-5xl font-bold mb-2 text-cyan-400 drop-shadow-md">Neon Racer</h1>
+      <p className="text-gray-400 mb-4 text-center text-sm sm:text-base">
+        Tilt your phone (or use ← → / A D on desktop)
+      </p>
+      <div className="text-lg sm:text-2xl font-semibold mb-2">
+        Score: {Math.floor(score / 10)}
+      </div>
 
       <div
         className="relative overflow-hidden rounded-lg border-4 border-cyan-500 shadow-xl shadow-cyan-500"
         style={{
-          width: GAME_WIDTH,
+          width: "90vw",
+          maxWidth: GAME_WIDTH,
           height: GAME_HEIGHT,
           background: "linear-gradient(180deg, #0f172a 0%, #1e293b 100%)",
         }}
@@ -178,8 +222,8 @@ const CarRaceGame = () => {
         {/* Game Over */}
         {gameOver && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-center">
-            <h2 className="text-5xl font-bold text-red-500 mb-4">GAME OVER</h2>
-            <p className="text-xl mb-6">Final Score: {Math.floor(score / 10)}</p>
+            <h2 className="text-4xl sm:text-5xl font-bold text-red-500 mb-4">GAME OVER</h2>
+            <p className="text-lg sm:text-xl mb-6">Final Score: {Math.floor(score / 10)}</p>
             <button
               onClick={startGame}
               className="bg-cyan-500 hover:bg-cyan-400 text-white font-bold py-3 px-8 rounded-xl text-2xl shadow-lg"
