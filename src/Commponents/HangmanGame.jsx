@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
-const WORDS = ["react", "tailwind", "hangman", "component", "storage", "coding"];
+const WORDS = ["r eact", "t ailwind", "han      gman", "c omponent", "s torage", "c oding"];
 
 const HangmanGame = () => {
   const [word, setWord] = useState("");
@@ -107,7 +108,7 @@ const HangmanGame = () => {
       {(isWinner || isLoser) && (
         <div className="text-center mt-4">
           <h2 className="text-2xl font-semibold mb-2">
-            {isWinner ? "🎉 You Won!" : ` You Lost! The word was "${word}"`}
+            {isWinner ? toast.success("You Won!") : toast.error("You lost !")}
           </h2>
           <button
             onClick={startNewGame}

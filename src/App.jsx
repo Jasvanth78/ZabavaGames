@@ -6,9 +6,13 @@ import { Routes,Route } from "react-router-dom";
 import HangmanGame from "./Commponents/HangmanGame";
 import Xogame from "./Commponents/Xogame";
 import MemoryMatch from "./Commponents/MemoryMatch";
+import   CarRaceGame  from "./Commponents/CarRaceGame";
+import ShootingGame from "./Commponents/ShootingGame";
+  import { ToastContainer, toast } from 'react-toastify';
+ 
 
 
-const App = () => {
+const App = ()  => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,7 +33,11 @@ const App = () => {
         <Route path="/summa" element={ <HangmanGame/>} />
         <Route path="/Xogame" element={ <Xogame/>} />
           <Route path="/MemoryMatch" element={ <MemoryMatch/>} />
+          <Route path="/CarRace" element={ <CarRaceGame/>} />
+          <Route path="/SpaceShooter" element={ <ShootingGame/>} />
     </Routes>
+    <ToastContainer/>
+    
     </div>
   );
 };
